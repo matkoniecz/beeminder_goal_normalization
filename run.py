@@ -3,36 +3,42 @@ import datetime
 from pyminder.pyminder import Pyminder
 
 def main():
-    break_start = datetime.datetime(2019,12,23)
-    break_end = datetime.datetime(2019,12,28)
-    enable_breaks(break_start, break_end)
+    validate_settings()
 
 def token():
     return open("token.secret").read()
 
-def enable_breaks(break_start, break_end):
+def validate_settings():
     pyminder = Pyminder(user='[your username - dummy field]', token=token())
 
     goals = pyminder.get_goals()
 
-    print("Hello,")
-    print("")
-    print("Sadly, it is too late for me to enable a break manually.")
-    print("I need to request a manual break override - from ", break_start.date(), "to", break_end.date(), "for following goals:")
-    print("")
     for goal in goals:
         # Goal objects expose all API data as dynamic properties.
         # http://api.beeminder.com/#attributes-2
 
-        # https://stackoverflow.com/a/46090618/4130619
-        ep = datetime.datetime(1970,1,1,0,0,0)
-        x = (break_end - ep).total_seconds()
-        needed = goal.get_needed(x)
-        if needed > 0:
-            print(goal.slug)
-            #print(goal.title)
-            #print(goal.fineprint)
-            #print(goal.losedate) # unix timestamp
+        if(goal.runits != "d"):
+            print("goal", goal.slug, "has rate set to something other than daily")
+        if(goal.secret != True):
+            print("goal", goal.slug, "is not set to be secret")
+        if(goal.datapublic != False):
+            print("goal", goal.slug, "is not set to have secret datapoints")
+        
+        print()
+        print(goal.slug)
+        print(goal.fineprint)
+        """
+        deadline (number): Seconds by which your deadline differs from midnight.
+        Negative is before midnight, positive is after midnight. Allowed range is -17*3600 to 6*3600 (7am to 6am).
+
+        leadtime (number): Days before derailing we start sending you reminders.
+        Zero means we start sending them on the eep day, when you will derail later that day.
+
+        alertstart (number): Seconds after midnight that we start sending you reminders
+        (on the day that you're scheduled to start getting them, see leadtime above).
+        """
+        if(goal.deadline < 0):
+            print("goal", goal.slug, "has deadline BEFORE midnight")
 
 
         # Goal objects also implement a handful of helper functions.
